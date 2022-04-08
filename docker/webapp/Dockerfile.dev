@@ -1,0 +1,16 @@
+FROM node:16.14.2
+LABEL maintainer="Alejandro Aguilar <emonics.aguilar@gmail.com>"
+ENV TZ ${TZ}
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+WORKDIR /usr/app/website
+COPY ./projects/website/package.json ./
+COPY ./projects/website/yarn.lock ./
+COPY ./projects/website/start-dev.sh ./
+RUN yarn
+
+RUN chmod +x start-dev.sh
+
+EXPOSE 8082
+EXPOSE 3003
+
+CMD ["bash", "start-dev.sh"]

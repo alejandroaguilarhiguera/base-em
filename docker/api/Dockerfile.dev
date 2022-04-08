@@ -1,0 +1,14 @@
+FROM node:16.14.2-jessie-slim
+LABEL maintainer="Alejandro Aguilar <emonics.aguilar@gmail.com>"
+
+# TODO: check this
+RUN  apt-get update -y \
+	&& apt-get install imagemagick ghostscript poppler-utils -y
+WORKDIR /usr/app/api
+COPY ./projects/api/package.json ./
+COPY ./projects/api/yarn.lock ./
+RUN yarn
+
+EXPOSE 3000
+
+CMD ["bash","start-dev.sh"]
