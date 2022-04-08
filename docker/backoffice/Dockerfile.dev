@@ -2,14 +2,14 @@ FROM node:16.14.2
 LABEL maintainer="Alejandro Aguilar <emonics.aguilar@gmail.com>"
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-WORKDIR /usr/app/webapp
-COPY ./projects/webapp/package.json ./
-COPY ./projects/webapp/yarn.lock ./
-COPY ./projects/webapp/start-dev.sh ./
+WORKDIR /usr/app/backoffice
+COPY ./projects/backoffice/package.json ./
+COPY ./projects/backoffice/yarn.lock ./
+COPY ./projects/backoffice/start-dev.sh ./
 RUN yarn
 
 RUN chmod +x start-dev.sh
 
-EXPOSE 3000
+EXPOSE 4200
 
 CMD ["bash", "start-dev.sh"]

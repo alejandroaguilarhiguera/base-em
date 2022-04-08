@@ -9,6 +9,6 @@ COPY ./projects/api/package.json ./
 COPY ./projects/api/yarn.lock ./
 RUN yarn
 
-EXPOSE 3000
+EXPOSE 1337
 
 CMD ["bash","start-dev.sh"]

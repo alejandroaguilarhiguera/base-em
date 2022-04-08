@@ -1,45 +1,31 @@
 version: '3.8'
+
+networks:
+  em:
+    driver: bridge
+volumes:
+  db:
+    driver: local
+  webapp:
+    driver: local
+  backoffice:
+    driver: local
+  api:
+    driver: local
+
 services:
   db:
     image: postgres:14.1-alpine
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     ports:
-      - '5432:5432'
+      - '${DATABASE_PORT}:5432'
     volumes: 
-      - db:/var/lib/postgresql/data
-volumes:
-  db:
-    driver: local
-
-
-  ########################
-  # Nginx Server
-  ########################
-  nginx:
-    container_name: rh-nginx
-    build:
-      context: './'
-      dockerfile: docker/nginx/Dockerfile.staging
-    image: rh-nginx
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    ports:
-      - '80:80' # Connect localhost 80 port to container 80 port
-      - '443:443'
-    depends_on:
-      - 'api'
-      - 'webapp'
-    volumes:
-      - ./.data/ssl:/etc/ssl/em.dev
-    links: # Link services to access http://backoffice and  http://api inside the container
-      - api:api
-      - webapp:webapp
-    extra_hosts:
-      - '${WEBAPP_DOMAIN}:127.0.0.1'
+      - db:/var/lib/postgresql/data:delegated
     networks:
-      - 'em'
+      - em
 
   ########################
   # WebApp server
@@ -53,12 +39,28 @@ volumes:
         - TZ=${TZ}
     image: em-webapp
     env_file: .env
-    environment:
-      - PORT=${WEBAPP_PORT}
     volumes:
-      - ./projects/website/.env:/usr/app/website/.env
+      - ./projects/webapp:/usr/app/webapp:delegated
     ports:
-      - '${WEBAPP_PORT}:8081'
+      - '${WEBAPP_PORT}:3000'
+    networks:
+      - 'em'
+
+  ########################
+  # Backoffice server
+  ########################
+  backoffice:
+    container_name: em-backoffice
+    build:
+      context: './'
+      dockerfile: docker/backoffice/Dockerfile
+      args:
+        - TZ=${TZ}
+    image: em-backoffice
+    volumes:
+      - ./projects/backoffice:/usr/app/backoffice:delegated
+    ports:
+      - '4200:4200'
     networks:
       - 'em'
 
@@ -76,10 +78,42 @@ volumes:
     env_file: .env
     links:
       - db:db
-      - webapp:webapp
     depends_on:
       - 'db'
+    ports:
+      - '${API_PORT}:1337'
     volumes:
       - ./projects/api/.env:/usr/app/api/.env
     networks:
       - 'em'
+
+
+
+
+  ########################
+  # Nginx Server
+  ########################
+  #nginx:
+  #  container_name: rh-nginx
+  #  build:
+  #    context: './'
+  #    dockerfile: docker/nginx/Dockerfile.staging
+  #  image: rh-nginx
+  #  command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  #  ports:
+  #    - '80:80' # Connect localhost 80 port to container 80 port
+  #    - '443:443'
+  #  depends_on:
+  #    - 'api'
+  #    - 'webapp'
+  #  volumes:
+  #    - ./.data/ssl:/etc/ssl/em.dev
+  #  links: # Link services to access http://backoffice and  http://api inside the container
+  #    - api:api
+  #    - webapp:webapp
+  #  extra_hosts:
+  #    - '${WEBAPP_DOMAIN}:127.0.0.1'
+  #  networks:
+  #    - 'em'
+
+
