@@ -34,7 +34,7 @@ services:
     container_name: em-webapp
     build:
       context: './'
-      dockerfile: docker/webapp/Dockerfile
+      dockerfile: docker/webapp/Dockerfile.dev
       args:
         - TZ=${TZ}
     image: em-webapp
@@ -58,7 +58,7 @@ services:
     container_name: em-backoffice
     build:
       context: './'
-      dockerfile: docker/backoffice/Dockerfile
+      dockerfile: docker/backoffice/Dockerfile.dev
       args:
         - TZ=${TZ}
     image: em-backoffice
@@ -81,7 +81,7 @@ services:
     container_name: em-api
     build:
       context: './'
-      dockerfile: docker/api/Dockerfile
+      dockerfile: docker/api/Dockerfile.dev
       args:
         - TZ=${TZ}
     image: em-api
@@ -96,34 +96,3 @@ services:
       - ./projects/api/.env:/usr/app/api/.env
     networks:
       - 'em'
-
-
-
-
-  ########################
-  # Nginx Server
-  ########################
-  nginx:
-    container_name: rh-nginx
-    build:
-      context: './'
-      dockerfile: docker/nginx/Dockerfile
-    image: rh-nginx
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    ports:
-      - '80:80' # Connect localhost 80 port to container 80 port
-      - '443:443'
-    depends_on:
-      - 'api'
-      - 'webapp'
-    volumes:
-      - ./.data/ssl:/etc/ssl/em.dev
-    links: # Link services to access http://backoffice and  http://api inside the container
-      - api:api
-      - webapp:webapp
-    extra_hosts:
-      - 'localhost:127.0.0.1'
-    networks:
-      - 'em'
-
-
